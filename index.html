@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@latest"></script>
+    <script src="./button.js"></script>
+    <script src="./link_buttons.js"></script>
+    <title>...</title>
+</head>
+
+<body>
+    <div id="editorjs"></div>
+
+    <script>
+        const editor = new EditorJS({
+            holder: 'editorjs',
+            tools: {
+                button: SimpleButton,
+                customPlugin: LinkButtons
+            }
+        });
+    </script>
+</body>
+
+</html>
+<style>
+    .custom-plugin-display-button {
+        display: flex;
+        height: 56px;
+        justify-content: center;
+        align-items: center;
+        border-radius: 12px;
+        border: 1px solid #FF57BA;
+        color: #FF57BA;
+        font-family: Onest;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 800;
+        line-height: normal;
+        letter-spacing: 0.7px;
+        text-transform: uppercase;
+        width: 50%;
+        text-decoration: none !important;
+    }
+
+    .custom-plugin-display-button:hover {
+        background-color: #0056b3;
+    }
+
+    .custom-plugin-container {
+        display: flex;
+        width: 358px;
+        gap: 16px;
+    }
+</style>
