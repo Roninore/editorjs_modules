@@ -8,70 +8,89 @@ class LinkButtons {
 
     constructor({ data, config, api }) {
         this.api = api;
-        this.data = {
-            text1: data.text1 || '',
-            link1: data.link1 || '',
-            text2: data.text2 || '',
-            link2: data.link2 || ''
-        };
+        this.data = data.buttons || [];
         this.container = document.createElement('div');
         this.container.classList.add('link-button-container');
 
-        this.inputText1 = this.createInput('text1', this.data.text1);
-        this.inputLink1 = this.createInput('link1', this.data.link1);
-        this.inputText2 = this.createInput('text2', this.data.text2);
-        this.inputLink2 = this.createInput('link2', this.data.link2);
+        this.inputText = this.createInput('text', '', 'Добавьте название');
+        this.inputLink = this.createInput('link', '', 'Добавьте ссылку');
 
-        this.saveButton = document.createElement('button');
-        this.saveButton.innerHTML = 'Сохранить';
-        this.saveButton.classList.add('link-button-button');
-        this.saveButton.addEventListener('click', () => {
-            const savedData = this.getData();
-            this.container.innerHTML = ''; // Очистить контейнер от инпутов и кнопки "Сохранить"
-            this.displayButtons(savedData);
+        this.addButton = document.createElement('button');
+        this.addButton.innerHTML = 'Добавить кнопку';
+        this.addButton.addEventListener('click', () => {
+            const text = this.inputText.value.trim();
+            const link = this.inputLink.value.trim();
+            if (text && link) {
+                this.data.push({ text, link });
+                this.renderButtons();
+                this.inputText.value = '';
+                this.inputLink.value = '';
+            }
         });
 
-        this.container.appendChild(this.inputText1);
-        this.container.appendChild(this.inputLink1);
-        this.container.appendChild(this.inputText2);
-        this.container.appendChild(this.inputLink2);
-        this.container.appendChild(this.saveButton);
-    }
-    displayButtons(data) {
-        const button1 = document.createElement('a');
-        button1.href = data.link1;
-        button1.textContent = data.text1;
-        button1.classList.add('link-button-display-button');
+        this.saveAndHideButton = document.createElement('button');
+        this.saveAndHideButton.innerHTML = 'Сохранить и скрыть инпуты';
+        this.saveAndHideButton.addEventListener('click', () => {
+            this.inputText.style.display = 'none';
+            this.inputLink.style.display = 'none';
+            this.addButton.style.display = 'none';
+            this.saveAndHideButton.style.display = 'none';
+        });
 
-        const button2 = document.createElement('a');
-        button2.href = data.link2;
-        button2.textContent = data.text2;
-        button2.classList.add('link-button-display-button');
+        this.container.appendChild(this.inputText);
+        this.container.appendChild(this.inputLink);
+        this.container.appendChild(this.addButton);
+        this.container.appendChild(this.saveAndHideButton);
 
-        this.container.appendChild(button1);
-        this.container.appendChild(button2);
+        this.renderButtons();
     }
-    createInput(key, value) {
+
+    createInput(key, value, placeholder) {
         const input = document.createElement('input');
         input.setAttribute('type', 'text');
-        input.setAttribute('placeholder', ` ${key}`);
+        input.setAttribute('placeholder', ` ${placeholder}`);
         input.classList.add('link-button-input');
         input.value = value;
-        input.addEventListener('input', () => {
-            this.data[key] = input.value;
-        });
         return input;
     }
 
-    getData() {
-        return this.data;
+    renderButtons() {
+        this.container.innerHTML = ''; // Очистить контейнер перед отображением кнопок
+
+        this.data.forEach(buttonData => {
+            const button = document.createElement('a');
+            button.href = buttonData.link;
+            button.textContent = buttonData.text;
+            button.classList.add('link-button-display-button');
+            this.container.appendChild(button);
+        });
+
+        this.container.appendChild(this.inputText);
+        this.container.appendChild(this.inputLink);
+        this.container.appendChild(this.addButton);
+        this.container.appendChild(this.saveAndHideButton);
+    }
+
+    saveAllButtons() {
+        this.data = this.data.filter(button => button.text && button.link);
+        this.api.saveData({ buttons: this.data });
+        alert('Кнопки сохранены!');
     }
 
     render() {
         return this.container;
     }
 
-    save() {
-        return this.data;
+    save(blockContent) {
+        const buttons = blockContent.querySelectorAll('a.link-button-display-button');
+
+        const data = Array.from(buttons).map(button => ({
+            text: button.textContent,
+            link: button.href
+        }));
+
+        return {
+            buttons: data
+        };
     }
 }
