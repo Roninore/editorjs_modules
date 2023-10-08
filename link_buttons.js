@@ -15,7 +15,7 @@ class LinkButtons {
             link2: data.link2 || ''
         };
         this.container = document.createElement('div');
-        this.container.classList.add('custom-plugin-container');
+        this.container.classList.add('link-button-container');
 
         this.inputText1 = this.createInput('text1', this.data.text1);
         this.inputLink1 = this.createInput('link1', this.data.link1);
@@ -24,7 +24,7 @@ class LinkButtons {
 
         this.saveButton = document.createElement('button');
         this.saveButton.innerHTML = 'Сохранить';
-        this.saveButton.classList.add('custom-plugin-button');
+        this.saveButton.classList.add('link-button-button');
         this.saveButton.addEventListener('click', () => {
             const savedData = this.getData();
             this.container.innerHTML = ''; // Очистить контейнер от инпутов и кнопки "Сохранить"
@@ -41,12 +41,12 @@ class LinkButtons {
         const button1 = document.createElement('a');
         button1.href = data.link1;
         button1.textContent = data.text1;
-        button1.classList.add('custom-plugin-display-button');
+        button1.classList.add('link-button-display-button');
 
         const button2 = document.createElement('a');
         button2.href = data.link2;
         button2.textContent = data.text2;
-        button2.classList.add('custom-plugin-display-button');
+        button2.classList.add('link-button-display-button');
 
         this.container.appendChild(button1);
         this.container.appendChild(button2);
@@ -55,7 +55,7 @@ class LinkButtons {
         const input = document.createElement('input');
         input.setAttribute('type', 'text');
         input.setAttribute('placeholder', ` ${key}`);
-        input.classList.add('custom-plugin-input');
+        input.classList.add('link-button-input');
         input.value = value;
         input.addEventListener('input', () => {
             this.data[key] = input.value;
@@ -75,6 +75,3 @@ class LinkButtons {
         return this.data;
     }
 }
-
-// Register the custom plugin
-EditorJS.plugins.customPlugin = CustomPlugin;

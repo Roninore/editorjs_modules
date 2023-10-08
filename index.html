@@ -16,9 +16,22 @@
     <script>
         const editor = new EditorJS({
             holder: 'editorjs',
+            i18n: {
+            toolNames: {
+                paragraph: 'Параграф',
+                embed: 'Ссылка на контент',
+                table: 'Таблица',
+                list: 'Список',
+                header: 'Заголовок',
+                image: 'Изображение',
+                quote: 'Цитата',
+                button: 'Заявка в guest list',
+                link_buttons: 'Ссылки'
+                }
+            },
             tools: {
                 button: SimpleButton,
-                customPlugin: LinkButtons
+                link_buttons: LinkButtons
             }
         });
     </script>
@@ -26,7 +39,7 @@
 
 </html>
 <style>
-    .custom-plugin-display-button {
+    .link-button-display-button {
         display: flex;
         height: 56px;
         justify-content: center;
@@ -45,11 +58,11 @@
         text-decoration: none !important;
     }
 
-    .custom-plugin-display-button:hover {
+    .link-button-display-button:hover {
         background-color: #0056b3;
     }
 
-    .custom-plugin-container {
+    .link-button-container {
         display: flex;
         width: 358px;
         gap: 16px;
