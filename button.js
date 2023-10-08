@@ -7,24 +7,21 @@ class SimpleButton {
     }
 
     constructor({ data }) {
-        this.data = data || { text: 'Click Me' };
+        this.data = data || { text: '' };
     }
 
     render() {
         const container = document.createElement('div');
-        const button = document.createElement('button');
-
-        // Установите начальный текст кнопки
+        const button = document.createElement('div');
         button.contentEditable = true;
-        button.innerText = this.data.text;
-
+        button.innerText = this.data.text || '';
+        button.classList.add('SimpleButton');
         container.appendChild(button);
-
         return container;
     }
 
     save(blockContent) {
-        const button = blockContent.querySelector('button');
+        const button = blockContent.querySelector('div');
         const text = button.innerText;
 
         return {

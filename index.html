@@ -17,16 +17,16 @@
         const editor = new EditorJS({
             holder: 'editorjs',
             i18n: {
-            toolNames: {
-                paragraph: 'Параграф',
-                embed: 'Ссылка на контент',
-                table: 'Таблица',
-                list: 'Список',
-                header: 'Заголовок',
-                image: 'Изображение',
-                quote: 'Цитата',
-                button: 'Заявка в guest list',
-                link_buttons: 'Ссылки'
+                toolNames: {
+                    paragraph: 'Параграф',
+                    embed: 'Ссылка на контент',
+                    table: 'Таблица',
+                    list: 'Список',
+                    header: 'Заголовок',
+                    image: 'Изображение',
+                    quote: 'Цитата',
+                    button: 'Заявка в guest list',
+                    link_buttons: 'Ссылки'
                 }
             },
             tools: {
@@ -66,5 +66,24 @@
         display: flex;
         width: 358px;
         gap: 16px;
+    }
+
+    .SimpleButton {
+        display: flex;
+        height: 56px;
+        justify-content: center;
+        align-items: center;
+        border-radius: 12px;
+        border: 1px solid #FF57BA;
+        color: #FF57BA;
+        font-family: Onest;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 800;
+        line-height: normal;
+        letter-spacing: 0.7px;
+        text-transform: uppercase;
+        width: 50%;
+        text-decoration: none !important;
     }
 </style>
