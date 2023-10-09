@@ -7,6 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@latest"></script>
     <script src="./button.js"></script>
     <script src="./link_buttons.js"></script>
+    <script src="./social_link.js"></script>
     <title>...</title>
 </head>
 
@@ -31,7 +32,9 @@
             },
             tools: {
                 button: SimpleButton,
-                link_buttons: LinkButtons
+                link_buttons: LinkButtons,
+                SocialLinkTool: SocialLinkTool
+
             }
         });
     </script>
@@ -56,6 +59,10 @@
         text-transform: uppercase;
         width: 50%;
         text-decoration: none !important;
+    }
+
+    .links-container {
+        display: flex;
     }
 
     .link-button-display-button:hover {
