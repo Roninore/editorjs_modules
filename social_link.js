@@ -78,7 +78,7 @@ class SocialLinkTool {
 
     static get toolbox() {
         return {
-            title: 'Social Links',
+            title: 'Ссылки но соц. сети',
         };
     }
 }

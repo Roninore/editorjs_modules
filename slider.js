@@ -124,7 +124,7 @@ class SliderTool {
 
     static get toolbox() {
         return {
-            title: 'Slider',
+            title: 'Галерея',
         };
     }
 }
