@@ -1,7 +1,7 @@
 class LinkButtons {
     static get toolbox() {
         return {
-            title: 'Ссылки',
+            title: 'Кнопки прозрачные',
             icon: '<svg width="17" height="17" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zM7.414 16.586l-3.586-3.586 1.414-1.414 2.172 2.172 6.172-6.172 1.414 1.414-7.586 7.586z"/></svg>'
         };
     }
