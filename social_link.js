@@ -6,7 +6,7 @@ class SocialLinkTool {
         this.saveButton = null;
         this.linksContainer = null;
         this.socialNetworks = [
-            { name: 'wa', icon: './icon/whatsapp.svg' },
+            { name: 'wa', icon: './icon/whatsapp.png' },
             { name: 'fb', icon: './icon/Facebook.svg' },
             { name: 'inst', icon: './icon/instagram.svg' },
             { name: 'web', icon: './icon/web.svg' }
