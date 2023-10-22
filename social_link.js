@@ -6,9 +6,10 @@ class SocialLinkTool {
         this.saveButton = null;
         this.linksContainer = null;
         this.socialNetworks = [
-            { name: 'WhatsApp', icon: 'https://i.ibb.co/pZhxvkH/whatsapp.png' },
-            { name: 'Facebook', icon: 'https://i.ibb.co/MCQ0Mzx/Facebook.png' },
-            { name: 'Instagram', icon: 'https://i.ibb.co/j39TKSZ/instagram.png' }
+            { name: 'wa', icon: './icon/whatsapp.png' },
+            { name: 'fb', icon: './icon/Facebook.svg' },
+            { name: 'inst', icon: './icon/instagram.svg' },
+            { name: 'web', icon: './icon/web.svg' }
         ];
     }
 
@@ -59,7 +60,8 @@ class SocialLinkTool {
     }
 
     insertSocialLink() {
-        const socialNetwork = prompt('Выберите социальную сеть (WhatsApp, Facebook, Instagram):');
+        const socialNetwork = prompt('Выберите социальную сеть (wa, web, fb, inst):');
+
         if (socialNetwork) {
             const link = prompt(`Введите ссылку на ${socialNetwork}:`);
             if (link) {
