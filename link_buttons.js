@@ -61,6 +61,7 @@ class LinkButtons {
             const button = document.createElement('a');
             button.href = buttonData.link;
             button.textContent = buttonData.text;
+            button.target = '_blank';
             button.classList.add('link-button-display-button');
             this.container.appendChild(button);
         });

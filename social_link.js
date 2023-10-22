@@ -61,6 +61,7 @@ class SocialLinkTool {
 
     insertSocialLink() {
         const socialNetwork = prompt('Выберите социальную сеть (wa, web, fb, inst):');
+
         if (socialNetwork) {
             const link = prompt(`Введите ссылку на ${socialNetwork}:`);
             if (link) {
@@ -79,7 +80,7 @@ class SocialLinkTool {
 
     static get toolbox() {
         return {
-            title: 'Social Links',
+            title: 'Ссылки но соц. сети',
         };
     }
 }
