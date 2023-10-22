@@ -6,10 +6,10 @@ class SocialLinkTool {
         this.saveButton = null;
         this.linksContainer = null;
         this.socialNetworks = [
-            { name: 'wa', icon: './icon/whatsapp.png' },
-            { name: 'fb', icon: './icon/Facebook.svg' },
-            { name: 'inst', icon: './icon/instagram.svg' },
-            { name: 'web', icon: './icon/web.svg' }
+            { name: 'wa', icon: 'https://cdn.jsdelivr.net/gh/Roninore/editorjs_modules@1.5/icon/whatsapp.png' },
+            { name: 'fb', icon: 'https://cdn.jsdelivr.net/gh/Roninore/editorjs_modules@1.5/icon/Facebook.svg' },
+            { name: 'inst', icon: 'https://cdn.jsdelivr.net/gh/Roninore/editorjs_modules@1.5/icon/instagram.svg' },
+            { name: 'web', icon: 'https://cdn.jsdelivr.net/gh/Roninore/editorjs_modules@1.5/icon/web.svg' }
         ];
     }
 
