@@ -6,10 +6,12 @@ class SocialLinkTool {
         this.saveButton = null;
         this.linksContainer = null;
         this.socialNetworks = [
+
             { name: 'whatsapp', icon: './icon/whatsapp.png' },
             { name: 'facebook', icon: './icon/Facebook.svg' },
             { name: 'instagram', icon: './icon/instagram.svg' },
             { name: 'web', icon: './icon/web.svg' }
+
         ];
     }
 
@@ -79,7 +81,7 @@ class SocialLinkTool {
 
     static get toolbox() {
         return {
-            title: 'Ссылки но соц. сети',
+            title: 'Ссылки на соц. сети',
         };
     }
 }
