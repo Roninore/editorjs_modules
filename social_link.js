@@ -7,10 +7,10 @@ class SocialLinkTool {
         this.linksContainer = null;
         this.socialNetworks = [
 
-            { name: 'whatsapp', icon: './icon/whatsapp.png' },
-            { name: 'facebook', icon: './icon/Facebook.svg' },
-            { name: 'instagram', icon: './icon/instagram.svg' },
-            { name: 'web', icon: './icon/web.svg' }
+            { name: 'whatsapp', icon: 'https://cdn.jsdelivr.net/gh/Roninore/editorjs_modules@1.5/icon/whatsapp.png' },
+            { name: 'facebook', icon: 'https://cdn.jsdelivr.net/gh/Roninore/editorjs_modules@1.5/icon/Facebook.svg' },
+            { name: 'instagram', icon: 'https://cdn.jsdelivr.net/gh/Roninore/editorjs_modules@1.5/icon/instagram.svg' },
+            { name: 'web', icon: 'https://cdn.jsdelivr.net/gh/Roninore/editorjs_modules@1.5/icon/web.svg' }
 
         ];
     }
