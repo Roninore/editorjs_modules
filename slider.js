@@ -47,8 +47,8 @@ class SliderTool {
 
 
     renderSlides() {
-        this.dotsContainer.innerHTML = ''; // Очищаем контейнер точек
-        this.dots = []; // Очищаем массив точ
+        this.dotsContainer.innerHTML = '';
+        this.dots = [];
 
         if (!this.data.slides || !Array.isArray(this.data.slides)) {
             this.data.slides = [];
@@ -57,21 +57,73 @@ class SliderTool {
         this.slidesContainer.innerHTML = '';
 
         this.data.slides.forEach((slide, index) => {
+            const slideContainer = document.createElement('div');
+            slideContainer.className = 'slide-container';
+
             const slideElement = document.createElement('div');
             slideElement.className = 'slide';
             slideElement.style.backgroundImage = `url(${slide})`;
-            this.slidesContainer.appendChild(slideElement);
+
+            const deleteButton = document.createElement('button');
+            deleteButton.innerText = 'Удалить';
+            deleteButton.className = 'delete-button';
+            deleteButton.addEventListener('click', (event) => {
+                event.preventDefault();// Остановка всплытия события
+                this.removeSlide(index);
+            });
+
+            const moveLeftButton = document.createElement('button');
+            moveLeftButton.innerText = '← Переместить влево';
+            moveLeftButton.className = 'left-button';
+            moveLeftButton.addEventListener('click', () => this.moveSlideLeft(index));
+            slideContainer.appendChild(moveLeftButton);
+
+            // Кнопка "Переместить вправо"
+            const moveRightButton = document.createElement('button');
+            moveRightButton.innerText = 'Переместить вправо →';
+            moveRightButton.className = 'right-button';
+            moveRightButton.addEventListener('click', () => this.moveSlideRight(index));
+            slideContainer.appendChild(moveRightButton);
+
+            slideContainer.appendChild(slideElement);
+            slideContainer.appendChild(deleteButton);
+
+            this.slidesContainer.appendChild(slideContainer);
 
             const dot = document.createElement('div');
             dot.className = 'slider-dot';
             dot.addEventListener('click', () => this.goToSlide(index));
             this.dotsContainer.appendChild(dot);
-            this.dots.push(dot); // Добавляем точку в массив
+            this.dots.push(dot);
         });
-
         this.updateActiveDot();
     }
 
+    moveSlideLeft() {
+        if (this.currentSlideIndex > 0) {
+            const removedSlide = this.data.slides.splice(this.currentSlideIndex, 1)[0];
+            this.data.slides.splice(this.currentSlideIndex - 1, 0, removedSlide);
+            this.renderSlides();
+            this.goToSlide(this.currentSlideIndex - 1);
+        }
+    }
+
+    moveSlideRight() {
+        if (this.currentSlideIndex < this.data.slides.length - 1) {
+            const removedSlide = this.data.slides.splice(this.currentSlideIndex, 1)[0];
+            this.data.slides.splice(this.currentSlideIndex + 1, 0, removedSlide);
+            this.renderSlides();
+            this.goToSlide(this.currentSlideIndex + 1);
+        }
+    }
+    removeSlide(index) {
+        if (index === this.data.slides.length - 1) {
+            // Если удаляемый слайд последний в массиве, переключаемся на предыдущий слайд
+            this.currentSlideIndex = index - 1;
+        }
+        this.data.slides.splice(index, 1);
+        this.renderSlides();
+    }
     addSlide() {
         const newSlide = this.input.value;
         if (newSlide) {
@@ -104,6 +156,13 @@ class SliderTool {
         this.saveButton.style.display = 'none';
     }
     handleSlideClick(event) {
+        const target = event.target;
+
+        // Проверяем, является ли целевой элемент кнопкой "Удалить"
+        if (target.classList.contains('delete-button') || target.classList.contains('left-button') || target.classList.contains('right-button')) {
+            // Если это кнопка "Удалить", обработку события не выполняем
+            return;
+        }
         const clickX = event.clientX;
         const slideRect = event.target.getBoundingClientRect();
         const slideCenterX = (slideRect.left + slideRect.right) / 2;
