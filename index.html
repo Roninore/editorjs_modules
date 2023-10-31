@@ -15,9 +15,14 @@
 
 <body>
     <div id="editorjs"></div>
-
+    <div id="json"></div>
     <script>
         const editor = new EditorJS({
+            onChange: () => {
+                editor.save().then(outputData => {
+                    document.getElementById("json").innerHTML = '<pre>' + JSON.stringify(outputData, null, 2) + '</pre>'
+                })
+            },
             holder: 'editorjs',
             i18n: {
                 toolNames: {
