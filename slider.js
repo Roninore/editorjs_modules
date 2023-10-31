@@ -49,31 +49,45 @@ class SliderTool {
     }
     handleFileSelect(event) {
         const files = event.target.files;
-        const imageUrls = [];
+        const dataURLs = [];
 
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
             const reader = new FileReader();
 
             reader.onload = (e) => {
-                const imageUrl = e.target.result;
-                imageUrls.push(imageUrl);
+                const dataURL = e.target.result;
+                dataURLs.push(dataURL);
 
-                if (imageUrls.length === files.length) {
-                    this.addSlides(imageUrls);
+                if (dataURLs.length === files.length) {
+                    this.addSlides(dataURLs);
                 }
             };
 
             reader.readAsDataURL(file);
         }
     }
-    addSlides(newSlides) {
-        if (Array.isArray(newSlides)) {
-            this.data.slides = this.data.slides.concat(newSlides);
+
+    addSlides(dataURLs) {
+        if (Array.isArray(dataURLs)) {
+            const blobs = dataURLs.map(dataURL => {
+                const byteString = atob(dataURL.split(',')[1]);
+                const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
+                const ab = new ArrayBuffer(byteString.length);
+                const ia = new Uint8Array(ab);
+
+                for (let i = 0; i < byteString.length; i++) {
+                    ia[i] = byteString.charCodeAt(i);
+                }
+
+                return new Blob([ab], { type: mimeString });
+            });
+
+            const blobURLs = blobs.map(blob => URL.createObjectURL(blob));
+            this.data.slides = blobURLs;
             this.renderSlides();
         }
     }
-
     renderSlides() {
         this.dotsContainer.innerHTML = '';
         this.dots = [];
