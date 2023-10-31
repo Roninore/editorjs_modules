@@ -3,20 +3,23 @@ class SliderTool {
         this.data = data || { slides: [] };
         this.container = null;
         this.slidesContainer = null;
-        this.input = null;
+        this.fileInput = null;
         this.addButton = null;
         this.saveButton = null;
         this.currentSlideIndex = 0;
-        this.dots = []; // Инициализация массива для точек навигации
+        this.dots = [];
     }
 
     render() {
         this.container = document.createElement('div');
         this.container.className = 'slider-tool';
 
-        this.input = document.createElement('input');
-        this.input.type = 'text';
-        this.container.appendChild(this.input);
+        this.fileInput = document.createElement('input');
+        this.fileInput.type = 'file';
+        this.fileInput.accept = 'image/*';
+        this.fileInput.multiple = true;
+        this.fileInput.addEventListener('change', (event) => this.handleFileSelect(event));
+        this.container.appendChild(this.fileInput);
 
         this.addButton = document.createElement('button');
         this.addButton.innerText = 'Добавить';
@@ -44,7 +47,32 @@ class SliderTool {
 
         return this.container;
     }
+    handleFileSelect(event) {
+        const files = event.target.files;
+        const imageUrls = [];
 
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                const imageUrl = e.target.result;
+                imageUrls.push(imageUrl);
+
+                if (imageUrls.length === files.length) {
+                    this.addSlides(imageUrls);
+                }
+            };
+
+            reader.readAsDataURL(file);
+        }
+    }
+    addSlides(newSlides) {
+        if (Array.isArray(newSlides)) {
+            this.data.slides = this.data.slides.concat(newSlides);
+            this.renderSlides();
+        }
+    }
 
     renderSlides() {
         this.dotsContainer.innerHTML = '';
@@ -151,10 +179,11 @@ class SliderTool {
     }
 
     saveSlides() {
-        this.input.style.display = 'none';
+        this.fileInput.style.display = 'none';
         this.addButton.style.display = 'none';
         this.saveButton.style.display = 'none';
     }
+
     handleSlideClick(event) {
         const target = event.target;
 
