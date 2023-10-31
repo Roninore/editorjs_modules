@@ -3,25 +3,33 @@ class SliderTool {
         this.data = data || { slides: [] };
         this.container = null;
         this.slidesContainer = null;
-        this.input = null;
+        this.fileInput = null;
         this.addButton = null;
         this.saveButton = null;
         this.currentSlideIndex = 0;
-        this.dots = []; // Инициализация массива для точек навигации
+        this.dots = [];
     }
 
     render() {
         this.container = document.createElement('div');
         this.container.className = 'slider-tool';
 
-        this.input = document.createElement('input');
-        this.input.type = 'text';
-        this.container.appendChild(this.input);
-
+        this.urlInput = document.createElement('input');
+        this.urlInput.type = 'text';
+        this.container.appendChild(this.urlInput);
         this.addButton = document.createElement('button');
         this.addButton.innerText = 'Добавить';
         this.addButton.addEventListener('click', () => this.addSlide());
         this.container.appendChild(this.addButton);
+
+        this.fileInput = document.createElement('input');
+        this.fileInput.type = 'file';
+        this.fileInput.accept = 'image/*';
+        this.fileInput.multiple = true;
+        this.fileInput.addEventListener('change', (event) => this.handleFileSelect(event));
+        this.container.appendChild(this.fileInput);
+
+
 
         this.slidesContainer = document.createElement('div');
         this.slidesContainer.className = 'slides-container';
@@ -44,8 +52,72 @@ class SliderTool {
 
         return this.container;
     }
+    handleFileSelect(event) {
+        const files = event.target.files;
+        const urls = [];
 
+        const filePromises = Array.from(files).map(file => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = (error) => reject(error);
+                reader.readAsDataURL(file);
+            });
+        });
 
+        Promise.all(filePromises)
+            .then(fileDataURLs => {
+                urls.push(...fileDataURLs);
+
+                // Обработка ссылок на фото
+                const textAreaValue = this.urlInput.value;
+                const urlsArray = textAreaValue.split('\n');
+                urlsArray.forEach(url => {
+                    if (url) {
+                        urls.push(url.trim()); // Убираем возможные пробелы в начале или конце URL-адреса
+                    }
+                });
+
+                if (urls.length > 0) {
+                    this.addSlides(urls);
+                }
+            })
+            .catch(error => {
+                console.error(error);
+            });
+    }
+
+    addSlides(sources) {
+        if (Array.isArray(sources)) {
+            const blobs = sources.map(source => {
+                if (source.startsWith('http') || source.startsWith('https')) {
+                    // Если источник - это URL, создаем Blob из него
+                    return fetch(source)
+                        .then(response => response.blob());
+                } else {
+                    // Иначе, это Data URL, создаем Blob из него
+                    const byteString = atob(source.split(',')[1]);
+                    const mimeString = source.split(',')[0].split(':')[1].split(';')[0];
+                    const ab = new ArrayBuffer(byteString.length);
+                    const ia = new Uint8Array(ab);
+                    for (let i = 0; i < byteString.length; i++) {
+                        ia[i] = byteString.charCodeAt(i);
+                    }
+                    return new Blob([ab], { type: mimeString });
+                }
+            });
+
+            Promise.all(blobs)
+                .then(blobArray => {
+                    const blobURLs = blobArray.map(blob => URL.createObjectURL(blob));
+                    this.data.slides = [...this.data.slides, ...blobURLs];
+                    this.renderSlides();
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        }
+    }
     renderSlides() {
         this.dotsContainer.innerHTML = '';
         this.dots = [];
@@ -125,11 +197,17 @@ class SliderTool {
         this.renderSlides();
     }
     addSlide() {
-        const newSlide = this.input.value;
-        if (newSlide) {
-            this.data.slides.push(newSlide);
-            this.renderSlides();
-            this.input.value = '';
+        const newSlideURL = this.urlInput.value;
+        if (newSlideURL) {
+            // Проверяем, является ли введенное значение ссылкой
+            if (newSlideURL.startsWith('http') || newSlideURL.startsWith('https')) {
+                this.data.slides.push(newSlideURL);
+                this.renderSlides();
+                this.urlInput.value = '';
+            } else {
+                alert('Пожалуйста, введите правильный URL для изображения.');
+                // Можно добавить пользовательский интерфейс для сообщения об ошибке
+            }
         }
     }
 
@@ -151,10 +229,12 @@ class SliderTool {
     }
 
     saveSlides() {
-        this.input.style.display = 'none';
+        this.urlInput.style.display = 'none';
+        this.fileInput.style.display = 'none';
         this.addButton.style.display = 'none';
         this.saveButton.style.display = 'none';
     }
+
     handleSlideClick(event) {
         const target = event.target;
 
