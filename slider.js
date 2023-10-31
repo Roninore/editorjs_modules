@@ -14,6 +14,14 @@ class SliderTool {
         this.container = document.createElement('div');
         this.container.className = 'slider-tool';
 
+        this.urlInput = document.createElement('input');
+        this.urlInput.type = 'text';
+        this.container.appendChild(this.urlInput);
+        this.addButton = document.createElement('button');
+        this.addButton.innerText = 'Добавить';
+        this.addButton.addEventListener('click', () => this.addSlide());
+        this.container.appendChild(this.addButton);
+
         this.fileInput = document.createElement('input');
         this.fileInput.type = 'file';
         this.fileInput.accept = 'image/*';
@@ -21,10 +29,7 @@ class SliderTool {
         this.fileInput.addEventListener('change', (event) => this.handleFileSelect(event));
         this.container.appendChild(this.fileInput);
 
-        this.addButton = document.createElement('button');
-        this.addButton.innerText = 'Добавить';
-        this.addButton.addEventListener('click', () => this.addSlide());
-        this.container.appendChild(this.addButton);
+
 
         this.slidesContainer = document.createElement('div');
         this.slidesContainer.className = 'slides-container';
@@ -49,43 +54,68 @@ class SliderTool {
     }
     handleFileSelect(event) {
         const files = event.target.files;
-        const dataURLs = [];
+        const urls = [];
 
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            const reader = new FileReader();
+        const filePromises = Array.from(files).map(file => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = (error) => reject(error);
+                reader.readAsDataURL(file);
+            });
+        });
 
-            reader.onload = (e) => {
-                const dataURL = e.target.result;
-                dataURLs.push(dataURL);
+        Promise.all(filePromises)
+            .then(fileDataURLs => {
+                urls.push(...fileDataURLs);
 
-                if (dataURLs.length === files.length) {
-                    this.addSlides(dataURLs);
+                // Обработка ссылок на фото
+                const textAreaValue = this.urlInput.value;
+                const urlsArray = textAreaValue.split('\n');
+                urlsArray.forEach(url => {
+                    if (url) {
+                        urls.push(url.trim()); // Убираем возможные пробелы в начале или конце URL-адреса
+                    }
+                });
+
+                if (urls.length > 0) {
+                    this.addSlides(urls);
                 }
-            };
-
-            reader.readAsDataURL(file);
-        }
+            })
+            .catch(error => {
+                console.error(error);
+            });
     }
 
-    addSlides(dataURLs) {
-        if (Array.isArray(dataURLs)) {
-            const blobs = dataURLs.map(dataURL => {
-                const byteString = atob(dataURL.split(',')[1]);
-                const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
-                const ab = new ArrayBuffer(byteString.length);
-                const ia = new Uint8Array(ab);
-
-                for (let i = 0; i < byteString.length; i++) {
-                    ia[i] = byteString.charCodeAt(i);
+    addSlides(sources) {
+        if (Array.isArray(sources)) {
+            const blobs = sources.map(source => {
+                if (source.startsWith('http') || source.startsWith('https')) {
+                    // Если источник - это URL, создаем Blob из него
+                    return fetch(source)
+                        .then(response => response.blob());
+                } else {
+                    // Иначе, это Data URL, создаем Blob из него
+                    const byteString = atob(source.split(',')[1]);
+                    const mimeString = source.split(',')[0].split(':')[1].split(';')[0];
+                    const ab = new ArrayBuffer(byteString.length);
+                    const ia = new Uint8Array(ab);
+                    for (let i = 0; i < byteString.length; i++) {
+                        ia[i] = byteString.charCodeAt(i);
+                    }
+                    return new Blob([ab], { type: mimeString });
                 }
-
-                return new Blob([ab], { type: mimeString });
             });
 
-            const blobURLs = blobs.map(blob => URL.createObjectURL(blob));
-            this.data.slides = blobURLs;
-            this.renderSlides();
+            Promise.all(blobs)
+                .then(blobArray => {
+                    const blobURLs = blobArray.map(blob => URL.createObjectURL(blob));
+                    this.data.slides = [...this.data.slides, ...blobURLs];
+                    this.renderSlides();
+                })
+                .catch(error => {
+                    console.error(error);
+                });
         }
     }
     renderSlides() {
@@ -167,11 +197,17 @@ class SliderTool {
         this.renderSlides();
     }
     addSlide() {
-        const newSlide = this.input.value;
-        if (newSlide) {
-            this.data.slides.push(newSlide);
-            this.renderSlides();
-            this.input.value = '';
+        const newSlideURL = this.urlInput.value;
+        if (newSlideURL) {
+            // Проверяем, является ли введенное значение ссылкой
+            if (newSlideURL.startsWith('http') || newSlideURL.startsWith('https')) {
+                this.data.slides.push(newSlideURL);
+                this.renderSlides();
+                this.urlInput.value = '';
+            } else {
+                alert('Пожалуйста, введите правильный URL для изображения.');
+                // Можно добавить пользовательский интерфейс для сообщения об ошибке
+            }
         }
     }
 
@@ -193,6 +229,7 @@ class SliderTool {
     }
 
     saveSlides() {
+        this.urlInput.style.display = 'none';
         this.fileInput.style.display = 'none';
         this.addButton.style.display = 'none';
         this.saveButton.style.display = 'none';
