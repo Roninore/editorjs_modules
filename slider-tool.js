@@ -105,7 +105,6 @@ class SliderTool {
         this.editButton = document.createElement('button');
         this.editButton.innerText = 'Редактировать';
         this.editButton.className = 'gallery-btn gallery-btn-edit';
-        this.editButton.style.display = 'none';
         this.editButton.addEventListener('click', () => this.startEditing());
 
         // Кнопка переключения режима отображения
@@ -120,7 +119,6 @@ class SliderTool {
         controlsContainer.appendChild(this.deleteButton);
         controlsContainer.appendChild(this.modeToggleButton);
         controlsContainer.appendChild(this.saveButton);
-        controlsContainer.appendChild(this.editButton);
 
         // Основной контейнер слайдера
         const sliderWrapper = document.createElement('div');
@@ -152,6 +150,7 @@ class SliderTool {
         this.container.appendChild(controlsContainer);
         this.container.appendChild(sliderWrapper);
         this.container.appendChild(this.dotsContainer);
+        this.container.appendChild(this.editButton); // Добавляем кнопку редактирования
 
 
 
@@ -175,6 +174,7 @@ class SliderTool {
                     padding: 20px;
                     margin: 15px 0;
                     background: white;
+                    position: relative;
                 }
 
                 .gallery-controls {
@@ -241,13 +241,37 @@ class SliderTool {
                 }
 
                 .gallery-btn-edit {
-                    background-color: #f39c12;
+                    background-color: #007bff;
                     color: white;
+                    position: absolute;
+                    top: 5px;
+                    right: 5px;
+                    opacity: 0;
+                    visibility: hidden;
+                    transition: opacity 0.2s ease, visibility 0.2s ease;
+                    z-index: 10;
+                    padding: 4px 8px;
+                    font-size: 10px;
+                    border-radius: 3px;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                    border: none;
+                    cursor: pointer;
+                    height: auto;
+                    line-height: 1.2;
                 }
 
                 .gallery-btn-edit:hover {
-                    background-color: #e67e22;
+                    background-color: #0056b3;
                     transform: translateY(-1px);
+                }
+
+                .gallery-tool:hover .gallery-btn-edit {
+                    opacity: 1;
+                    visibility: visible;
+                }
+
+                .gallery-tool:not(.read-only) .gallery-btn-edit {
+                    display: none;
                 }
 
                 .gallery-btn-mode {
@@ -662,7 +686,6 @@ class SliderTool {
         this.deleteButton.style.display = 'none';
         this.modeToggleButton.style.display = 'none';
         this.saveButton.style.display = 'none';
-        this.editButton.style.display = 'inline-block';
         
         // Обновляем рендеринг для скрытия интерактивности
         this.renderSlides();
@@ -679,7 +702,6 @@ class SliderTool {
         this.deleteButton.style.display = this.data.slides.length > 0 ? 'inline-block' : 'none';
         this.modeToggleButton.style.display = 'inline-block';
         this.saveButton.style.display = 'inline-block';
-        this.editButton.style.display = 'none';
         
         // Обновляем рендеринг для восстановления интерактивности
         this.renderSlides();

@@ -352,48 +352,28 @@ class ContainerTool {
                     cursor: default;
                 }
 
-                /* Стили для группировки блоков по ID контейнера */
+                /* Стили для группировки блоков по ID контайнера */
                 .container-styled-block {
                     transition: all 0.3s ease;
-                    border-left: 4px solid transparent;
-                    padding: 10px 16px;
                     margin: 0;
                     position: relative;
-                    overflow: hidden;
                 }
 
-                .container-styled-block::before {
-                    content: '';
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    bottom: 0;
-                    right: 40px;
-                    z-index: -1;
-                    pointer-events: none;
+                .container-styled-block .ce-block__content {
+                    padding: 10px 16px;
+                    border-radius: 6px;
+                    transition: all 0.3s ease;
                 }
 
-                .container-styled-block.white-theme {
-                    border-left-color: #4f8bd6;
-                }
-
-                .container-styled-block.white-theme::before {
+                .container-styled-block.white-theme .ce-block__content {
                     background-color: #ffffff;
                 }
 
-                .container-styled-block.gray-theme {
-                    border-left-color: #6c757d;
-                }
-
-                .container-styled-block.gray-theme::before {
+                .container-styled-block.gray-theme .ce-block__content {
                     background-color: #f8f9fa;
                 }
 
-                .container-styled-block.blue-theme {
-                    border-left-color: #2196f3;
-                }
-
-                .container-styled-block.blue-theme::before {
+                .container-styled-block.blue-theme .ce-block__content {
                     background-color: #e3f2fd;
                 }
 
@@ -417,6 +397,8 @@ class ContainerTool {
                 .container-styled-block.collapsed {
                     display: none;
                 }
+
+
             `;
             document.head.appendChild(style);
         }
