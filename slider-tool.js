@@ -1,4 +1,3 @@
-
 class SliderTool {
     constructor({ data, api, config }) {
         this.data = data || { slides: [] };
@@ -6,6 +5,13 @@ class SliderTool {
         if (!this.data.slides || !Array.isArray(this.data.slides)) {
             this.data.slides = [];
         }
+        // Обеспечиваем обратную совместимость - преобразуем строки в объекты
+        this.data.slides = this.data.slides.map(slide => {
+            if (typeof slide === 'string') {
+                return { url: slide, caption: '' };
+            }
+            return { url: slide.url || '', caption: slide.caption || '' };
+        });
         // Устанавливаем режим отображения по умолчанию
         if (!this.data.displayMode) {
             this.data.displayMode = 'slider';
@@ -15,26 +21,39 @@ class SliderTool {
         this.container = null;
         this.slidesContainer = null;
         this.input = null;
+        this.captionInput = null;
         this.addButton = null;
         this.deleteButton = null;
         this.saveButton = null;
         this.currentSlideIndex = 0;
         this.dots = [];
         this.isEditMode = true;
+        this.isRendering = false;
     }
 
     // Получение данных для сохранения
     save() {
-        return { 
+        const result = { 
             slides: this.data.slides,
             displayMode: this.data.displayMode || 'slider'
         };
+        console.log('Saving block data:', result);
+        return result;
     }
 
     // Валидация данных
     validate(savedData) {
         if (!savedData.slides || !Array.isArray(savedData.slides)) {
             return false;
+        }
+        // Проверяем, что каждый слайд имеет корректную структуру
+        for (const slide of savedData.slides) {
+            if (typeof slide === 'string') {
+                continue; // Поддержка старого формата
+            }
+            if (!slide || typeof slide !== 'object' || !slide.url) {
+                return false;
+            }
         }
         // Разрешаем сохранение даже пустой галереи
         return true;
@@ -72,16 +91,34 @@ class SliderTool {
         const controlsContainer = document.createElement('div');
         controlsContainer.className = 'gallery-controls';
 
+        // Контейнер для полей ввода
+        const inputContainer = document.createElement('div');
+        inputContainer.className = 'gallery-input-container';
+
         // Поле ввода URL
         this.input = document.createElement('input');
         this.input.type = 'text';
         this.input.placeholder = 'Введите URL изображения';
-        this.input.className = 'gallery-input';
+        this.input.className = 'gallery-input gallery-input-url';
         this.input.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                this.captionInput.focus();
+            }
+        });
+
+        // Поле ввода подписи
+        this.captionInput = document.createElement('input');
+        this.captionInput.type = 'text';
+        this.captionInput.placeholder = 'Подпись к изображению (необязательно)';
+        this.captionInput.className = 'gallery-input gallery-input-caption';
+        this.captionInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
                 this.addSlide();
             }
         });
+
+        inputContainer.appendChild(this.input);
+        inputContainer.appendChild(this.captionInput);
 
         // Кнопка добавления
         this.addButton = document.createElement('button');
@@ -114,7 +151,7 @@ class SliderTool {
         this.modeToggleButton.title = 'Переключить режим отображения';
         this.modeToggleButton.addEventListener('click', () => this.toggleDisplayMode());
 
-        controlsContainer.appendChild(this.input);
+        controlsContainer.appendChild(inputContainer);
         controlsContainer.appendChild(this.addButton);
         controlsContainer.appendChild(this.deleteButton);
         controlsContainer.appendChild(this.modeToggleButton);
@@ -152,8 +189,6 @@ class SliderTool {
         this.container.appendChild(this.dotsContainer);
         this.container.appendChild(this.editButton); // Добавляем кнопку редактирования
 
-
-
         // Сохраняем ссылку на экземпляр
         this.container.__galleryTool = this;
 
@@ -181,18 +216,34 @@ class SliderTool {
                     display: flex;
                     gap: 10px;
                     margin-bottom: 20px;
-                    align-items: center;
+                    align-items: flex-start;
                     flex-wrap: wrap;
                 }
 
-                .gallery-input {
+                .gallery-input-container {
+                    display: flex;
+                    flex-direction: column;
                     flex: 1;
-                    min-width: 250px;
+                    min-width: 300px;
+                    gap: 8px;
+                }
+
+                .gallery-input {
                     padding: 10px 12px;
                     border: 1px solid #e8e8eb;
                     border-radius: 6px;
                     font-size: 14px;
                     outline: none;
+                    width: 100%;
+                }
+
+                .gallery-input-url {
+                    font-weight: 500;
+                }
+
+                .gallery-input-caption {
+                    font-style: italic;
+                    font-size: 13px;
                 }
 
                 .gallery-input:focus {
@@ -314,6 +365,7 @@ class SliderTool {
                     background-size: cover;
                     background-position: center;
                     background-repeat: no-repeat;
+                    overflow: hidden;
                 }
 
                 .gallery-slide.active {
@@ -327,6 +379,64 @@ class SliderTool {
                     color: #666;
                     font-size: 16px;
                     background-color: #f8f9fa;
+                }
+
+                .gallery-slide-caption {
+                    position: absolute;
+                    bottom: 0;
+                    left: 0;
+                    right: 0;
+                    background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+                    color: white;
+                    padding: 20px 20px 15px;
+                    font-size: 14px;
+                    line-height: 1.4;
+                    font-weight: 500;
+                    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+                }
+
+                .gallery-slide-caption:empty {
+                    display: none;
+                }
+
+                .gallery-slide-caption.editable {
+                    cursor: pointer;
+                    transition: background-color 0.2s;
+                }
+
+                .gallery-slide-caption.editable:hover {
+                    background: linear-gradient(transparent, rgba(0, 0, 0, 0.85));
+                }
+
+                /* Отключаем общий hover для grid режима, используем специфичный */
+                .gallery-tool.grid-mode .gallery-slide-caption.editable:hover {
+                    background: linear-gradient(transparent, rgba(0, 0, 0, 0.9)) !important;
+                }
+
+                .gallery-slide-caption.editing {
+                    background: rgba(0, 0, 0, 0.9);
+                    padding: 15px;
+                }
+
+                .gallery-caption-input {
+                    width: 100%;
+                    background: transparent;
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                    border-radius: 4px;
+                    color: white;
+                    padding: 8px 12px;
+                    font-size: 14px;
+                    font-weight: 500;
+                    outline: none;
+                }
+
+                .gallery-caption-input:focus {
+                    border-color: #4f8bd6;
+                    box-shadow: 0 0 0 2px rgba(79, 139, 214, 0.3);
+                }
+
+                .gallery-caption-input::placeholder {
+                    color: rgba(255, 255, 255, 0.6);
                 }
 
                 .gallery-arrow {
@@ -403,8 +513,6 @@ class SliderTool {
                     display: none;
                 }
 
-
-
                 /* Стили для режима таблицы */
                 .gallery-tool.grid-mode .gallery-slider-wrapper {
                     height: auto;
@@ -422,11 +530,12 @@ class SliderTool {
                 }
 
                 .gallery-tool.grid-mode .gallery-slide {
-                    position: static;
+                    position: relative;
                     opacity: 1;
                     height: 200px;
                     border-radius: 8px;
                     transition: transform 0.2s, box-shadow 0.2s;
+                    overflow: hidden;
                 }
 
                 .gallery-tool.grid-mode .gallery-slide:hover {
@@ -446,6 +555,21 @@ class SliderTool {
                 .gallery-tool.grid-mode .gallery-dots {
                     display: none;
                 }
+
+                /* Подписи в режиме таблицы */
+                .gallery-tool.grid-mode .gallery-slide-caption {
+                    position: absolute;
+                    bottom: 0;
+                    left: 0;
+                    right: 0;
+                    background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+                    padding: 10px;
+                    font-size: 12px;
+                    line-height: 1.3;
+                    z-index: 2;
+                    margin: 0;
+                    transform: none;
+                }
             `;
             document.head.appendChild(style);
         }
@@ -454,6 +578,13 @@ class SliderTool {
     // Рендеринг слайдов
     renderSlides() {
         console.log('Rendering slides:', this.data.slides, 'Mode:', this.data.displayMode);
+        
+        // Защита от повторных вызовов во время рендеринга
+        if (this.isRendering) {
+            console.log('Already rendering, skipping...');
+            return;
+        }
+        this.isRendering = true;
         
         // Очищаем контейнеры
         this.slidesContainer.innerHTML = '';
@@ -483,6 +614,7 @@ class SliderTool {
             } else {
                 this.modeToggleButton.style.display = 'none';
             }
+            this.isRendering = false;
             return;
         }
 
@@ -515,6 +647,10 @@ class SliderTool {
             this.modeToggleButton.title = 'Переключить на таблицу';
         }
 
+        // Счетчик загруженных изображений
+        let loadedImages = 0;
+        const totalImages = this.data.slides.length;
+
         // Создаем слайды
         this.data.slides.forEach((slide, index) => {
             console.log(`Creating slide ${index}:`, slide);
@@ -533,18 +669,62 @@ class SliderTool {
                 slideElement.classList.add('active');
             }
 
+            // Получаем URL и подпись слайда
+            const slideUrl = typeof slide === 'string' ? slide : slide.url;
+            const slideCaption = typeof slide === 'object' ? slide.caption : '';
+
             // Проверяем и загружаем изображение
             const img = new Image();
             img.onload = () => {
-                console.log(`Image loaded: ${slide}`);
-                slideElement.style.backgroundImage = `url("${slide}")`;
+                console.log(`Image loaded: ${slideUrl}`);
+                slideElement.style.backgroundImage = `url("${slideUrl}")`;
+                loadedImages++;
+                
+                // Когда все изображения загружены, снимаем флаг рендеринга
+                if (loadedImages === totalImages) {
+                    this.isRendering = false;
+                    console.log('All images loaded, rendering complete');
+                }
             };
             img.onerror = () => {
-                console.log(`Image failed: ${slide}`);
+                console.log(`Image failed: ${slideUrl}`);
                 slideElement.classList.add('empty');
                 slideElement.textContent = 'Ошибка загрузки изображения';
+                loadedImages++;
+                
+                // Даже при ошибке учитываем как "загруженное"
+                if (loadedImages === totalImages) {
+                    this.isRendering = false;
+                    console.log('All images processed, rendering complete');
+                }
             };
-            img.src = slide;
+            img.src = slideUrl;
+
+            // Добавляем подпись к слайду (всегда создаем элемент для возможности добавления подписи)
+            const captionElement = document.createElement('div');
+            captionElement.className = 'gallery-slide-caption';
+            if (this.isEditMode) {
+                captionElement.classList.add('editable');
+                captionElement.title = 'Нажмите для редактирования подписи';
+            }
+            
+            if (slideCaption) {
+                captionElement.textContent = slideCaption;
+            } else if (this.isEditMode) {
+                captionElement.textContent = 'Нажмите для добавления подписи';
+                captionElement.style.opacity = '0.7';
+                captionElement.style.fontStyle = 'italic';
+            }
+            
+            // Добавляем обработчик для редактирования подписи
+            if (this.isEditMode) {
+                captionElement.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.editCaption(index, captionElement);
+                });
+            }
+            
+            slideElement.appendChild(captionElement);
 
             // В режиме таблицы добавляем обработчик клика для удаления
             if (displayMode === 'grid') {
@@ -576,17 +756,31 @@ class SliderTool {
         if (this.currentSlideIndex >= this.data.slides.length) {
             this.currentSlideIndex = Math.max(0, this.data.slides.length - 1);
         }
+        
+        // Если нет изображений для загрузки, сразу снимаем флаг
+        if (totalImages === 0) {
+            this.isRendering = false;
+        }
     }
 
     // Добавление слайда
     addSlide() {
-        const newSlide = this.input.value.trim();
-        if (newSlide) {
+        const newSlideUrl = this.input.value.trim();
+        const newSlideCaption = this.captionInput.value.trim();
+        
+        if (newSlideUrl) {
+            const newSlide = {
+                url: newSlideUrl,
+                caption: newSlideCaption
+            };
             this.data.slides.push(newSlide);
             this.input.value = '';
+            this.captionInput.value = '';
             this.renderSlides();
             // Переходим к новому слайду
             this.goToSlide(this.data.slides.length - 1);
+            // Возвращаем фокус на поле URL для быстрого добавления следующего изображения
+            this.input.focus();
         }
     }
 
@@ -682,6 +876,7 @@ class SliderTool {
         
         // Переключаем видимость кнопок
         this.input.style.display = 'none';
+        this.captionInput.style.display = 'none';
         this.addButton.style.display = 'none';
         this.deleteButton.style.display = 'none';
         this.modeToggleButton.style.display = 'none';
@@ -698,6 +893,7 @@ class SliderTool {
         
         // Переключаем видимость кнопок
         this.input.style.display = 'block';
+        this.captionInput.style.display = 'block';
         this.addButton.style.display = 'inline-block';
         this.deleteButton.style.display = this.data.slides.length > 0 ? 'inline-block' : 'none';
         this.modeToggleButton.style.display = 'inline-block';
@@ -707,15 +903,107 @@ class SliderTool {
         this.renderSlides();
     }
 
-    // Переключение режима отображения
-    toggleDisplayMode() {
-        const currentMode = this.data.displayMode || 'slider';
-        const newMode = currentMode === 'slider' ? 'grid' : 'slider';
+    // Редактирование подписи слайда
+    editCaption(slideIndex, captionElement) {
+        if (this.isRendering || !this.isEditMode) {
+            return;
+        }
+
+        // Проверяем, что слайд существует
+        if (slideIndex < 0 || slideIndex >= this.data.slides.length) {
+            return;
+        }
+
+        const slide = this.data.slides[slideIndex];
+        const currentCaption = slide.caption || '';
+
+        // Создаем поле ввода
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'gallery-caption-input';
+        input.value = currentCaption;
+        input.placeholder = 'Введите подпись к изображению...';
+
+        // Заменяем содержимое элемента подписи
+        captionElement.classList.add('editing');
+        captionElement.innerHTML = '';
+        captionElement.appendChild(input);
+
+        // Фокусируемся и выделяем текст
+        input.focus();
+        input.select();
+
+        // Функция сохранения
+        const saveCaption = () => {
+            const newCaption = input.value.trim();
+            this.data.slides[slideIndex].caption = newCaption;
+            
+            // Обновляем отображение
+            captionElement.classList.remove('editing');
+            if (newCaption) {
+                captionElement.textContent = newCaption;
+                captionElement.style.opacity = '1';
+                captionElement.style.fontStyle = 'normal';
+            } else {
+                captionElement.textContent = 'Нажмите для добавления подписи';
+                captionElement.style.opacity = '0.7';
+                captionElement.style.fontStyle = 'italic';
+            }
+            
+            console.log(`Caption updated for slide ${slideIndex}:`, newCaption);
+        };
+
+        // Функция отмены
+        const cancelEdit = () => {
+            captionElement.classList.remove('editing');
+            if (currentCaption) {
+                captionElement.textContent = currentCaption;
+                captionElement.style.opacity = '1';
+                captionElement.style.fontStyle = 'normal';
+            } else {
+                captionElement.textContent = 'Нажмите для добавления подписи';
+                captionElement.style.opacity = '0.7';
+                captionElement.style.fontStyle = 'italic';
+            }
+        };
+
+        // Обработчики событий
+        input.addEventListener('keydown', (e) => {
+            e.stopPropagation();
+            if (e.key === 'Enter') {
+                saveCaption();
+            } else if (e.key === 'Escape') {
+                cancelEdit();
+            }
+        });
+
+        input.addEventListener('blur', () => {
+            saveCaption();
+        });
+
+        // Предотвращаем всплытие событий
+        captionElement.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+    }
+
+    // Безопасное изменение режима отображения
+    setDisplayMode(mode) {
+        if (this.isRendering) {
+            console.log('Cannot change mode while rendering');
+            return false;
+        }
         
-        this.data.displayMode = newMode;
+        if (mode !== 'grid' && mode !== 'slider') {
+            console.log('Invalid display mode:', mode);
+            return false;
+        }
+        
+        console.log(`Setting display mode to: ${mode}`);
+        this.data.displayMode = mode;
         
         // Обновляем текст кнопки
-        if (newMode === 'grid') {
+        if (mode === 'grid') {
             this.modeToggleButton.innerText = '📱 Слайдер';
             this.modeToggleButton.title = 'Переключить на слайдер';
         } else {
@@ -723,7 +1011,29 @@ class SliderTool {
             this.modeToggleButton.title = 'Переключить на таблицу';
         }
         
+        // Принудительно вызываем сохранение для уведомления EditorJS об изменениях
+        if (this.api && this.api.blocks) {
+            this.api.blocks.save();
+        }
+        
         this.renderSlides();
+        return true;
+    }
+
+    // Переключение режима отображения
+    toggleDisplayMode() {
+        // Предотвращаем переключение во время рендеринга
+        if (this.isRendering) {
+            console.log('Cannot toggle mode while rendering');
+            return;
+        }
+        
+        const currentMode = this.data.displayMode || 'slider';
+        const newMode = currentMode === 'slider' ? 'grid' : 'slider';
+        
+        console.log(`Switching from ${currentMode} to ${newMode}`);
+        
+        this.setDisplayMode(newMode);
     }
 
     // Статический метод для создания блока из JSON данных
@@ -749,7 +1059,11 @@ class SliderTool {
             case 'pattern':
                 const url = event.detail.data;
                 if (url) {
-                    this.data.slides.push(url);
+                    const newSlide = {
+                        url: url,
+                        caption: ''
+                    };
+                    this.data.slides.push(newSlide);
                     this.renderSlides();
                     this.goToSlide(this.data.slides.length - 1);
                 }
