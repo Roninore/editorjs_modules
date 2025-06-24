@@ -27,7 +27,8 @@ class SliderTool {
         this.saveButton = null;
         this.currentSlideIndex = 0;
         this.dots = [];
-        this.isEditMode = true;
+        // При создании блока он должен быть в режиме редактирования только если данные пустые
+        this.isEditMode = !data || !data.slides || data.slides.length === 0;
         this.isRendering = false;
     }
 
@@ -192,6 +193,12 @@ class SliderTool {
         // Сохраняем ссылку на экземпляр
         this.container.__galleryTool = this;
 
+        // Устанавливаем корректный режим отображения при инициализации
+        if (!this.isEditMode) {
+            // Если блок не в режиме редактирования, сразу переводим в режим чтения
+            setTimeout(() => this.finishEditing(), 0);
+        }
+
         this.renderSlides();
 
         return this.container;
@@ -210,6 +217,8 @@ class SliderTool {
                     margin: 15px 0;
                     background: white;
                     position: relative;
+                    box-sizing: border-box;
+                    overflow: hidden;
                 }
 
                 .gallery-controls {
@@ -517,7 +526,9 @@ class SliderTool {
                 .gallery-tool.grid-mode .gallery-slider-wrapper {
                     height: auto;
                     min-height: 200px;
-                    padding: 20px;
+                    padding: 15px;
+                    margin: 0;
+                    box-sizing: border-box;
                 }
 
                 .gallery-tool.grid-mode .gallery-slides {
@@ -1017,6 +1028,20 @@ class SliderTool {
         }
         
         this.renderSlides();
+        
+        // Принудительно обновляем блок в EditorJS для обновления превью
+        if (this.api && this.api.ui) {
+            setTimeout(() => {
+                // Находим текущий блок и обновляем его
+                const currentBlock = this.api.blocks.getCurrentBlockIndex();
+                if (currentBlock !== -1) {
+                    this.api.blocks.save().then(() => {
+                        console.log('Block preview updated after mode change');
+                    });
+                }
+            }, 100);
+        }
+        
         return true;
     }
 
