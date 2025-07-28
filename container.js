@@ -127,7 +127,7 @@ class ContainerTool {
 
         // Кнопка завершения редактирования
         this.saveButton = document.createElement('button');
-        this.saveButton.innerText = 'Завершить редактирование';
+        this.saveButton.innerText = 'Завершить';
         this.saveButton.className = 'container-btn container-btn-save';
         this.saveButton.addEventListener('click', () => this.finishEditing());
 
@@ -369,10 +369,12 @@ class ContainerTool {
                     position: relative;
                 }
 
+                /* Стили для всех блоков контейнера */
                 .container-styled-block .ce-block__content {
                     padding: 10px 16px;
                     border-radius: 6px;
                     transition: all 0.3s ease;
+                    position: relative;
                 }
 
                 .container-styled-block.white-theme .ce-block__content {
@@ -406,6 +408,32 @@ class ContainerTool {
                 /* Скрытие блоков для свернутых контейнеров */
                 .container-styled-block.collapsed {
                     display: none;
+                }
+
+                /* Стили выделения для блоков контейнера */
+                .container-styled-block.ce-block--selected .ce-block__content {
+                    /* Добавляем рамку выделения, сохраняя фоновые цвета */
+                    border: 2px solid #388ae5 !important;
+                    box-shadow: 0 0 0 1px rgba(56, 138, 229, 0.3) !important;
+                }
+
+                .container-styled-block.ce-block--focused .ce-block__content {
+                    /* Более тонкая рамка для фокуса */
+                    border: 1px solid #388ae5 !important;
+                    box-shadow: 0 0 0 1px rgba(56, 138, 229, 0.2) !important;
+                }
+
+                /* Стили выделения для самого блока контейнера */
+                .ce-block--selected .container-tool {
+                    /* Добавляем рамку выделения для контейнера */
+                    border: 2px solid #388ae5 !important;
+                    box-shadow: 0 0 0 1px rgba(56, 138, 229, 0.3) !important;
+                }
+
+                .ce-block--focused .container-tool {
+                    /* Более тонкая рамка для фокуса контейнера */
+                    border: 1px solid #388ae5 !important;
+                    box-shadow: 0 0 0 1px rgba(56, 138, 229, 0.2) !important;
                 }
 
 
