@@ -20,13 +20,16 @@ class ContainerTool {
 
     // Получение данных для сохранения
     save() {
-        return {
+        const savedData = {
             text: this.textElement ? this.textElement.textContent : this.data.text,
             background: this.data.background || 'white',
             collapsible: this.data.collapsible || false,
             collapsed: this.data.collapsed || false,
             blockId: this.blockId // Сохраняем ID блока
         };
+        
+        console.log('Container save() called for:', this.blockId, 'data:', savedData);
+        return savedData;
     }
 
     // Валидация данных
@@ -55,12 +58,21 @@ class ContainerTool {
 
     // Основной метод рендеринга
     render() {
-        // Генерируем уникальный ID для блока
-        this.blockId = this.data.blockId || `container-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        // Генерируем уникальный ID для блока (улучшенная логика для старых контейнеров)
+        if (!this.blockId) {
+            this.blockId = this.data.blockId || `container-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            // Обновляем данные с новым ID если он был сгенерирован
+            if (!this.data.blockId) {
+                this.data.blockId = this.blockId;
+            }
+        }
         
         this.container = document.createElement('div');
         this.container.className = 'container-tool';
         this.container.setAttribute('data-container-id', this.blockId);
+        
+        // Связываем экземпляр с DOM элементом для дополнительных проверок
+        this.container._containerInstance = this;
 
         // Добавляем стили
         this.addStyles();
@@ -402,41 +414,100 @@ class ContainerTool {
 
     // Безопасная установка фона без триггера автосохранения
     setBackgroundSafely(background) {
+        console.log('setBackgroundSafely called for container:', this.blockId, 'background:', background);
+        
+        // Устанавливаем флаг подавления на более длительное время
         if (typeof window !== 'undefined') {
             window.suppressAutoSave = true;
         }
-        this.setBackground(background);
+        
+        // Дополнительная защита через временное отключение onChange
+        this.temporarilyDisableAutoSave(() => {
+            this.setBackground(background);
+        });
+        
+        // Увеличиваем время подавления для старых контейнеров
         setTimeout(() => {
             if (typeof window !== 'undefined') {
                 window.suppressAutoSave = false;
+                console.log('suppressAutoSave disabled for background change');
             }
-        }, 100);
+        }, 300);
     }
 
     // Безопасное переключение collapsible без триггера автосохранения
     toggleCollapsibleSafely() {
+        console.log('toggleCollapsibleSafely called for container:', this.blockId, 'current state:', this.data.collapsible);
+        
+        // Устанавливаем флаг подавления на более длительное время
         if (typeof window !== 'undefined') {
             window.suppressAutoSave = true;
         }
-        this.toggleCollapsible();
+        
+        // Дополнительная защита через временное отключение onChange
+        this.temporarilyDisableAutoSave(() => {
+            this.toggleCollapsible();
+        });
+        
+        // Увеличиваем время подавления для старых контейнеров
         setTimeout(() => {
             if (typeof window !== 'undefined') {
                 window.suppressAutoSave = false;
+                console.log('suppressAutoSave disabled for collapsible change');
             }
-        }, 100);
+        }, 300);
     }
 
     // Безопасное переключение collapsed без триггера автосохранения
     toggleCollapsedSafely() {
+        console.log('toggleCollapsedSafely called for container:', this.blockId, 'current state:', this.data.collapsed);
+        
         if (typeof window !== 'undefined') {
             window.suppressAutoSave = true;
         }
-        this.toggleCollapsed();
+        
+        this.temporarilyDisableAutoSave(() => {
+            this.toggleCollapsed();
+        });
+        
         setTimeout(() => {
             if (typeof window !== 'undefined') {
                 window.suppressAutoSave = false;
+                console.log('suppressAutoSave disabled for collapsed change');
             }
-        }, 100);
+        }, 300);
+    }
+
+    // Временное отключение автосохранения с дополнительными мерами предосторожности
+    temporarilyDisableAutoSave(callback) {
+        // Сохраняем оригинальный onChange если он есть
+        const originalOnChange = this.api && this.api.blocks && this.api.blocks.onChange;
+        
+        try {
+            // Временно отключаем onChange на уровне API
+            if (this.api && this.api.blocks) {
+                this.api.blocks.onChange = () => {
+                    console.log('onChange temporarily disabled for container metadata change');
+                };
+            }
+            
+            // Устанавливаем дополнительный флаг
+            this._metadataChanging = true;
+            
+            // Выполняем callback
+            callback();
+            
+        } catch (error) {
+            console.error('Error during metadata change:', error);
+        } finally {
+            // Восстанавливаем оригинальный onChange через небольшую задержку
+            setTimeout(() => {
+                if (this.api && this.api.blocks && originalOnChange) {
+                    this.api.blocks.onChange = originalOnChange;
+                }
+                this._metadataChanging = false;
+            }, 100);
+        }
     }
 
     // Установка фона
