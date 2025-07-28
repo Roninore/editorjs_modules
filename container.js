@@ -14,6 +14,8 @@ class ContainerTool {
         // Режим редактирования только для действительно новых блоков
         this.isEditMode = !data || !data.text || data.text.trim().length === 0;
         this.blockId = null; // Уникальный ID блока
+        
+        // Убираем локальный флаг, используем глобальный window.suppressAutoSave
     }
 
     // Получение данных для сохранения
@@ -74,38 +76,28 @@ class ContainerTool {
         const whiteButton = document.createElement('button');
         whiteButton.innerText = '⚪ Белый';
         whiteButton.className = 'container-btn container-btn-bg';
-        whiteButton.addEventListener('click', () => {
-            this.setBackground('white');
-            // Принудительно обновляем стили после изменения
-            setTimeout(() => {
-                if (typeof window.updateContainerStyles === 'function') {
-                    window.updateContainerStyles();
-                }
-            }, 50);
+        whiteButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.setBackgroundSafely('white');
         });
 
         const grayButton = document.createElement('button');
         grayButton.innerText = '⚫ Серый';
         grayButton.className = 'container-btn container-btn-bg';
-        grayButton.addEventListener('click', () => {
-            this.setBackground('gray');
-            setTimeout(() => {
-                if (typeof window.updateContainerStyles === 'function') {
-                    window.updateContainerStyles();
-                }
-            }, 50);
+        grayButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.setBackgroundSafely('gray');
         });
 
         const blueButton = document.createElement('button');
         blueButton.innerText = '🔵 Голубой';
         blueButton.className = 'container-btn container-btn-bg';
-        blueButton.addEventListener('click', () => {
-            this.setBackground('blue');
-            setTimeout(() => {
-                if (typeof window.updateContainerStyles === 'function') {
-                    window.updateContainerStyles();
-                }
-            }, 50);
+        blueButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.setBackgroundSafely('blue');
         });
 
         backgroundContainer.appendChild(whiteButton);
@@ -116,13 +108,10 @@ class ContainerTool {
         this.collapsibleButton = document.createElement('button');
         this.collapsibleButton.innerText = this.data.collapsible ? '✅ Скрываемый' : '❌ Не скрываемый';
         this.collapsibleButton.className = 'container-btn container-btn-collapsible';
-        this.collapsibleButton.addEventListener('click', () => {
-            this.toggleCollapsible();
-            setTimeout(() => {
-                if (typeof window.updateContainerStyles === 'function') {
-                    window.updateContainerStyles();
-                }
-            }, 50);
+        this.collapsibleButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.toggleCollapsibleSafely();
         });
 
         // Кнопка завершения редактирования
@@ -155,13 +144,10 @@ class ContainerTool {
         this.collapseToggle.className = 'container-collapse-toggle';
         this.collapseToggle.innerHTML = this.data.collapsed ? '▶️' : '▼️';
         this.collapseToggle.style.display = 'none';
-        this.collapseToggle.addEventListener('click', () => {
-            this.toggleCollapsed();
-            setTimeout(() => {
-                if (typeof window.updateContainerStyles === 'function') {
-                    window.updateContainerStyles();
-                }
-            }, 50);
+        this.collapseToggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.toggleCollapsedSafely();
         });
 
         // Контейнер заголовка с кнопкой сворачивания
@@ -414,11 +400,57 @@ class ContainerTool {
         }
     }
 
+    // Безопасная установка фона без триггера автосохранения
+    setBackgroundSafely(background) {
+        if (typeof window !== 'undefined') {
+            window.suppressAutoSave = true;
+        }
+        this.setBackground(background);
+        setTimeout(() => {
+            if (typeof window !== 'undefined') {
+                window.suppressAutoSave = false;
+            }
+        }, 100);
+    }
+
+    // Безопасное переключение collapsible без триггера автосохранения
+    toggleCollapsibleSafely() {
+        if (typeof window !== 'undefined') {
+            window.suppressAutoSave = true;
+        }
+        this.toggleCollapsible();
+        setTimeout(() => {
+            if (typeof window !== 'undefined') {
+                window.suppressAutoSave = false;
+            }
+        }, 100);
+    }
+
+    // Безопасное переключение collapsed без триггера автосохранения
+    toggleCollapsedSafely() {
+        if (typeof window !== 'undefined') {
+            window.suppressAutoSave = true;
+        }
+        this.toggleCollapsed();
+        setTimeout(() => {
+            if (typeof window !== 'undefined') {
+                window.suppressAutoSave = false;
+            }
+        }, 100);
+    }
+
     // Установка фона
     setBackground(background) {
         this.data.background = background;
         this.updateBackgroundButtons();
         this.applyContainerSettings();
+        
+        // Обновляем стили с задержкой, только если не подавляем автосохранение
+        setTimeout(() => {
+            if (typeof window.updateContainerStyles === 'function') {
+                window.updateContainerStyles();
+            }
+        }, 50);
     }
 
     // Переключение возможности скрытия
@@ -426,6 +458,13 @@ class ContainerTool {
         this.data.collapsible = !this.data.collapsible;
         this.collapsibleButton.innerText = this.data.collapsible ? '✅ Скрываемый' : '❌ Не скрываемый';
         this.applyContainerSettings();
+        
+        // Обновляем стили с задержкой, только если не подавляем автосохранение
+        setTimeout(() => {
+            if (typeof window.updateContainerStyles === 'function') {
+                window.updateContainerStyles();
+            }
+        }, 50);
     }
 
     // Переключение состояния скрытия
@@ -433,6 +472,13 @@ class ContainerTool {
         this.data.collapsed = !this.data.collapsed;
         this.collapseToggle.innerHTML = this.data.collapsed ? '▶️' : '▼️';
         this.applyContainerSettings();
+        
+        // Обновляем стили с задержкой
+        setTimeout(() => {
+            if (typeof window.updateContainerStyles === 'function') {
+                window.updateContainerStyles();
+            }
+        }, 50);
     }
 
     // Обновление состояния кнопок фона
